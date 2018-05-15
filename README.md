@@ -30,6 +30,8 @@ You have considerable latitude on how to display this data, obtain it, and what 
 We’d also like you to try and add at least one “additional feature” to this program (and if you’re able, all of them). They’re listed below as command line switches for a terminal program, but we’d accept any method that lets a user decide how to display this data.
 
 —max-daily-profit: We’d like to know which day in our data set would provide the highest amount of profit for each security if purchased at the day’s low and sold at the day’s high.  Please display the ticker symbol, date, and the amount of profit.
+
 —busy-day: We’d like to know which days generated unusually high activity for our securities.  Please display the ticker symbol, date, and volume for each day where the volume was more than 10% higher than the security’s average volume (Note: You’ll need to calculate the average volume, and should display that somewhere too).
+
 —biggest-loser: Which security had the most days where the closing price was lower than the opening price.  Please display the ticker symbol and the number of days that security’s closing price was lower than that day’s opening price.
 When you have completed the exercise, please upload your entire solution to Github.com and send an email with the URL of your repository to <email address> and include your name in the email.  Please make sure you have an appropriate README documenting how we should compile (if necessary) and run your solution.
