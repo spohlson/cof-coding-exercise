@@ -1,4 +1,4 @@
-package com.cof.app.model;
+package com.cof.app.model.quandl;
 
 import java.util.List;
 

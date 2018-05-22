@@ -1,22 +1,19 @@
 package com.cof.app.model;
 
-import java.util.List;
-import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonPropertyOrder({ "start_date", "end_date" })
-public class PricingData {
+public class DailyPricingData {
 
 	@JsonProperty("start_date")
 	private String startDate;
 	@JsonProperty("end_date")
 	private String endDate;
-	private Map<String, List<DayPricingData>> tickerPricingDataMap;
+	@JsonProperty("ticker_data")
+	private TickersPricingData tickerData;
 
-	public PricingData(String startDate, String endDate) {
+	public DailyPricingData(String startDate, String endDate) {
 		this.startDate = startDate;
 		this.endDate = endDate;
 	}
@@ -37,13 +34,12 @@ public class PricingData {
 		this.endDate = endDate;
 	}
 
-	@JsonAnyGetter
-	public Map<String, List<DayPricingData>> getTickerPricingDataMap() {
-		return tickerPricingDataMap;
+	public TickersPricingData getTickerData() {
+		return tickerData;
 	}
 
-	public void setTickerPricingDataMap(Map<String, List<DayPricingData>> tickerPricingDataMap) {
-		this.tickerPricingDataMap = tickerPricingDataMap;
+	public void setTickerData(TickersPricingData tickerData) {
+		this.tickerData = tickerData;
 	}
 
 }

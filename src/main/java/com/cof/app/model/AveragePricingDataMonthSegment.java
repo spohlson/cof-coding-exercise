@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonPropertyOrder({ "month", "average_open", "average_close" })
-public class AverageMonthlyOpenClose {
+public class AveragePricingDataMonthSegment {
 
 	private String month;
 	@JsonProperty("average_open")
@@ -14,7 +14,7 @@ public class AverageMonthlyOpenClose {
 	@JsonProperty("average_close")
 	private String averageClose;
 
-	public AverageMonthlyOpenClose(String month, double avgOpen, double avgClose) {
+	public AveragePricingDataMonthSegment(String month, double avgOpen, double avgClose) {
 		this.month = month;
 		averageOpen = formatAverage(avgOpen);
 		averageClose = formatAverage(avgClose);

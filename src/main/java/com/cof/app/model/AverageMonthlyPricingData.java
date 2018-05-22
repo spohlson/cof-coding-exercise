@@ -1,9 +1,5 @@
 package com.cof.app.model;
 
-import java.util.List;
-import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
@@ -14,7 +10,8 @@ public class AverageMonthlyPricingData {
 	private String startMonth;
 	@JsonProperty("end_month")
 	private String endMonth;
-	private Map<String, List<AverageMonthlyOpenClose>> monthlyAveragesMap;
+	@JsonProperty("ticker_data")
+	private TickersMonthlyAveragesData tickerData;
 
 	public AverageMonthlyPricingData(String startMonth, String endMonth) {
 		this.startMonth = startMonth;
@@ -37,14 +34,12 @@ public class AverageMonthlyPricingData {
 		this.endMonth = endMonth;
 	}
 
-	@JsonAnyGetter
-	public Map<String, List<AverageMonthlyOpenClose>> getMonthlyAveragesMap() {
-		return monthlyAveragesMap;
+	public TickersMonthlyAveragesData getTickerData() {
+		return tickerData;
 	}
 
-	public void setMonthlyAveragesMap(
-			Map<String, List<AverageMonthlyOpenClose>> monthlyAveragesMap) {
-		this.monthlyAveragesMap = monthlyAveragesMap;
+	public void setTickerData(TickersMonthlyAveragesData tickerData) {
+		this.tickerData = tickerData;
 	}
 
 }

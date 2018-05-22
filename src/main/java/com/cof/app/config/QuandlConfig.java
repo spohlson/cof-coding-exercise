@@ -9,7 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.cof.app.model.RouteTemplate;
+import com.cof.app.model.quandl.QuandlRouteTemplate;
 
 @Configuration
 @ConfigurationProperties(prefix = "quandl")
@@ -34,7 +34,7 @@ public class QuandlConfig {
 	private String dateFormat;
 
 	@NotEmpty
-	private Map<RouteTemplate, String> routeTemplatesMap;
+	private Map<QuandlRouteTemplate, String> routeTemplatesMap;
 
 	public String getApiKey() {
 		return apiKey;
@@ -84,15 +84,15 @@ public class QuandlConfig {
 		this.dateFormat = dateFormat;
 	}
 
-	public Map<RouteTemplate, String> getRouteTemplatesMap() {
+	public Map<QuandlRouteTemplate, String> getRouteTemplatesMap() {
 		return routeTemplatesMap;
 	}
 
-	public void setRouteTemplatesMap(Map<RouteTemplate, String> routeTemplatesMap) {
+	public void setRouteTemplatesMap(Map<QuandlRouteTemplate, String> routeTemplatesMap) {
 		this.routeTemplatesMap = routeTemplatesMap;
 	}
 
-	public String getApiForRoute(RouteTemplate route) {
+	public String getApiForRoute(QuandlRouteTemplate route) {
 		String template = routeTemplatesMap.get(route);
 
 		if (StringUtils.isEmpty(template)) {

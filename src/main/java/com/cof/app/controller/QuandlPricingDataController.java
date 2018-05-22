@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cof.app.driver.impl.QuandlDriver;
 import com.cof.app.exception.InvalidParameterException;
-import com.cof.app.model.QuandlPricingData;
-import com.cof.app.model.QuandlPricingDataset;
+import com.cof.app.model.quandl.QuandlTickerPricingData;
+import com.cof.app.model.quandl.QuandlPricingDataset;
 
 @RestController
 @RequestMapping("/quandl")
@@ -26,7 +26,7 @@ public class QuandlPricingDataController {
 	private QuandlDriver driver;
 
 	@RequestMapping(value = "/pricing", method = RequestMethod.GET)
-	public ResponseEntity<?> getPricingData(
+	public ResponseEntity<?> getDailyPricingData(
 			@NotEmpty
 			@RequestParam(value = "tickers")
 			List<String> tickers,
@@ -39,7 +39,7 @@ public class QuandlPricingDataController {
 			List<QuandlPricingDataset> datasets = new ArrayList<>(tickers.size());
 
 			for (String ticker : tickers) {
-				QuandlPricingData pricingData = driver.getPricingData(ticker, startDate,
+				QuandlTickerPricingData pricingData = driver.getPricingData(ticker, startDate,
 						endDate);
 				QuandlPricingDataset dataset = pricingData.getDataset();
 

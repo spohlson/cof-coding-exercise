@@ -14,19 +14,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cof.app.model.AverageMonthlyPricingData;
-import com.cof.app.model.PricingData;
+import com.cof.app.model.DailyPricingData;
 import com.cof.app.service.PricingService;
 
 @Validated
 @RestController
-@RequestMapping("/data")
+@RequestMapping("/data/pricing")
 public class PricingDataController {
 
 	@Autowired
 	private PricingService pricingService;
 
-	@RequestMapping(value = "/pricing", method = RequestMethod.GET)
-	public ResponseEntity<?> getPricingData(
+	@RequestMapping(value = "/daily", method = RequestMethod.GET)
+	public ResponseEntity<?> getDailyPricingData(
 			@NotEmpty
 			@RequestParam(value = "tickers")
 			List<String> tickers,
@@ -35,14 +35,16 @@ public class PricingDataController {
 			@RequestParam(value = "end_date", required = false)
 			String endDate) {
 
-		PricingData pricingData = pricingService.getPricingData(tickers, startDate, endDate);
-		return new ResponseEntity<PricingData>(pricingData, HttpStatus.OK);
+		DailyPricingData pricingData = pricingService.getDailyPricingData(tickers, startDate,
+				endDate);
+		return new ResponseEntity<DailyPricingData>(pricingData, HttpStatus.OK);
 	}
-	
+
 	@RequestMapping(value = "/avg-monthly", method = RequestMethod.GET)
 	public ResponseEntity<?> getAverageMonthlyPricingData() {
-		
-		AverageMonthlyPricingData avgMonthlyPricingData = pricingService.getAverageMonthlyPricingData();
+
+		AverageMonthlyPricingData avgMonthlyPricingData = pricingService
+				.getAverageMonthlyPricingData();
 		return new ResponseEntity<AverageMonthlyPricingData>(avgMonthlyPricingData, HttpStatus.OK);
 	}
 

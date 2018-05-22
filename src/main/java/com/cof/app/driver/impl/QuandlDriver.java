@@ -12,9 +12,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.cof.app.config.QuandlConfig;
 import com.cof.app.driver.PricingDriver;
-import com.cof.app.model.ApiQueryParam;
-import com.cof.app.model.QuandlPricingData;
-import com.cof.app.model.RouteTemplate;
+import com.cof.app.model.quandl.QuandlApiQueryParam;
+import com.cof.app.model.quandl.QuandlTickerPricingData;
+import com.cof.app.model.quandl.QuandlRouteTemplate;
 
 @Service
 public class QuandlDriver extends PricingDriver {
@@ -30,12 +30,12 @@ public class QuandlDriver extends PricingDriver {
 
 	///////////// API Request Methods /////////////
 
-	public QuandlPricingData getPricingData(String ticker, String startDate,
+	public QuandlTickerPricingData getPricingData(String ticker, String startDate,
 			String endDate) {
-		URI uri = buildURI(RouteTemplate.PRICING_DATA, ticker, startDate, endDate);
+		URI uri = buildURI(QuandlRouteTemplate.PRICING_DATA, ticker, startDate, endDate);
 
-		QuandlPricingData pricingData = rest
-				.exchange(uri, HttpMethod.GET, getDefaultHttpEntity(), QuandlPricingData.class)
+		QuandlTickerPricingData pricingData = rest
+				.exchange(uri, HttpMethod.GET, getDefaultHttpEntity(), QuandlTickerPricingData.class)
 				.getBody();
 
 		return pricingData;
@@ -43,7 +43,7 @@ public class QuandlDriver extends PricingDriver {
 
 	///////////// REST Builder Methods /////////////
 
-	private URI buildURI(RouteTemplate routeTemplate, String ticker, String startDate,
+	private URI buildURI(QuandlRouteTemplate routeTemplate, String ticker, String startDate,
 			String endDate) {
 		String api = config.getApiForRoute(routeTemplate);
 
@@ -64,10 +64,10 @@ public class QuandlDriver extends PricingDriver {
 
 	private void appendDefaultParams(UriComponentsBuilder builder, String startDate,
 			String endDate) {
-		builder.queryParam(ApiQueryParam.API_KEY.toLowerCase(), config.getApiKey());
-		builder.queryParam(ApiQueryParam.START_DATE.toLowerCase(), startDate);
-		builder.queryParam(ApiQueryParam.END_DATE.toLowerCase(), endDate);
-		builder.queryParam(ApiQueryParam.ORDER.toLowerCase(), "asc");
+		builder.queryParam(QuandlApiQueryParam.API_KEY.value(), config.getApiKey());
+		builder.queryParam(QuandlApiQueryParam.START_DATE.value(), startDate);
+		builder.queryParam(QuandlApiQueryParam.END_DATE.value(), endDate);
+		builder.queryParam(QuandlApiQueryParam.ORDER.value(), "asc");
 	}
 
 }

@@ -1,8 +1,8 @@
-package com.cof.app.model;
+package com.cof.app.model.quandl;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class QuandlPricingData {
+public class QuandlTickerPricingData {
 
 	@JsonProperty("dataset")
 	private QuandlPricingDataset dataset;
