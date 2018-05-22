@@ -1,2 +1,12 @@
 quandl:
-  apiKey: <insert key here>
+  apiKey: <api_key>
+  baseAPI: https://www.quandl.com/api/v3
+  dateFormat: yyyy-MM-dd
+  defaultStartDate: 2017-01-01
+  defaultEndDate: 2017-06-30
+  defaultTickers:
+    - COF
+    - GOOGL
+    - MSFT
+  routeTemplatesMap:
+    PRICING_DATA: "/datasets/WIKI/%s.json"
