@@ -11,7 +11,7 @@ public class DailyPricingData {
 	@JsonProperty("end_date")
 	private String endDate;
 	@JsonProperty("ticker_data")
-	private TickersPricingData tickerData;
+	private TickersDailyPricingData tickerData;
 
 	public DailyPricingData(String startDate, String endDate) {
 		this.startDate = startDate;
@@ -34,11 +34,11 @@ public class DailyPricingData {
 		this.endDate = endDate;
 	}
 
-	public TickersPricingData getTickerData() {
+	public TickersDailyPricingData getTickerData() {
 		return tickerData;
 	}
 
-	public void setTickerData(TickersPricingData tickerData) {
+	public void setTickerData(TickersDailyPricingData tickerData) {
 		this.tickerData = tickerData;
 	}
 

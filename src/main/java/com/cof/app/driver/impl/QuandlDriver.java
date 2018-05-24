@@ -13,8 +13,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.cof.app.config.QuandlConfig;
 import com.cof.app.driver.PricingDriver;
 import com.cof.app.model.quandl.QuandlApiQueryParam;
-import com.cof.app.model.quandl.QuandlTickerPricingData;
 import com.cof.app.model.quandl.QuandlRouteTemplate;
+import com.cof.app.model.quandl.QuandlTickerPricingData;
 
 @Service
 public class QuandlDriver extends PricingDriver {
@@ -41,7 +41,7 @@ public class QuandlDriver extends PricingDriver {
 		return pricingData;
 	}
 
-	///////////// REST Builder Methods /////////////
+	///////////// URI Helper/Builder Methods /////////////
 
 	private URI buildURI(QuandlRouteTemplate routeTemplate, String ticker, String startDate,
 			String endDate) {

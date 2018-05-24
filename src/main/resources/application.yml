@@ -1,12 +1,25 @@
+defaults:
+  startDate: 2017-01-01
+  endDate: 2017-06-30
+  tickers: COF,GOOGL,MSFT
+
 quandl:
   apiKey: <api_key>
   baseAPI: https://www.quandl.com/api/v3
   dateFormat: yyyy-MM-dd
-  defaultStartDate: 2017-01-01
-  defaultEndDate: 2017-06-30
-  defaultTickers:
-    - COF
-    - GOOGL
-    - MSFT
   routeTemplatesMap:
     PRICING_DATA: "/datasets/WIKI/%s.json"
+  pricingDataColumnOrder:
+    - DATE
+    - OPEN
+    - HIGH
+    - LOW
+    - CLOSE
+    - VOLUME
+    - EX_DIVIDEND
+    - SPLIT_RATIO
+    - ADJ_OPEN
+    - ADJ_HIGH
+    - ADJ_LOW
+    - ADJ_CLOSE
+    - ADJ_VOLUME

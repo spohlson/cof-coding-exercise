@@ -5,11 +5,11 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 
-public class TickersPricingData {
+public class TickersDailyPricingData {
 
 	private Map<String, List<PricingDataDaySegment>> tickerDailyPricingDataMap;
 
-	public TickersPricingData(Map<String, List<PricingDataDaySegment>> tickerPricingDataMap) {
+	public TickersDailyPricingData(Map<String, List<PricingDataDaySegment>> tickerPricingDataMap) {
 		this.tickerDailyPricingDataMap = tickerPricingDataMap;
 	}
 

@@ -9,6 +9,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import com.cof.app.exception.DataNotFoundException;
+import com.cof.app.model.quandl.QuandlPricingDataColumn;
 import com.cof.app.model.quandl.QuandlRouteTemplate;
 
 @Configuration
@@ -22,19 +24,16 @@ public class QuandlConfig {
 	private String baseApi;
 
 	@NotEmpty
-	private String defaultStartDate;
-
-	@NotEmpty
-	private String defaultEndDate;
-
-	@NotEmpty
-	private List<String> defaultTickers;
-
-	@NotEmpty
 	private String dateFormat;
 
 	@NotEmpty
 	private Map<QuandlRouteTemplate, String> routeTemplatesMap;
+
+	@NotEmpty
+	private List<QuandlPricingDataColumn> pricingDataColumnOrder;
+
+	// @NotEmpty
+	// private Map<QuandlPricingDataColumn, Integer> pricingDataColumnIndexMap;
 
 	public String getApiKey() {
 		return apiKey;
@@ -52,30 +51,6 @@ public class QuandlConfig {
 		this.baseApi = baseApi;
 	}
 
-	public String getDefaultStartDate() {
-		return defaultStartDate;
-	}
-
-	public void setDefaultStartDate(String defaultStartDate) {
-		this.defaultStartDate = defaultStartDate;
-	}
-
-	public String getDefaultEndDate() {
-		return defaultEndDate;
-	}
-
-	public void setDefaultEndDate(String defaultEndDate) {
-		this.defaultEndDate = defaultEndDate;
-	}
-
-	public List<String> getDefaultTickers() {
-		return defaultTickers;
-	}
-
-	public void setDefaultTickers(List<String> defaultTickers) {
-		this.defaultTickers = defaultTickers;
-	}
-
 	public String getDateFormat() {
 		return dateFormat;
 	}
@@ -90,6 +65,33 @@ public class QuandlConfig {
 
 	public void setRouteTemplatesMap(Map<QuandlRouteTemplate, String> routeTemplatesMap) {
 		this.routeTemplatesMap = routeTemplatesMap;
+	}
+
+	public List<QuandlPricingDataColumn> getPricingDataColumnOrder() {
+		return pricingDataColumnOrder;
+	}
+
+	public void setPricingDataColumnOrder(List<QuandlPricingDataColumn> pricingDataColumnOrder) {
+		this.pricingDataColumnOrder = pricingDataColumnOrder;
+	}
+
+	public int getPricingDataColumnOrderSize() {
+		return pricingDataColumnOrder.size();
+	}
+
+	public QuandlPricingDataColumn getQuandlPricingDataColumnByIndex(int index) {
+		return pricingDataColumnOrder.get(index);
+	}
+
+	public int getPricingDataColumnIndex(QuandlPricingDataColumn column) {
+		for (int i = 0; i < pricingDataColumnOrder.size(); i++) {
+
+			if (column.equals(pricingDataColumnOrder.get(i))) {
+				return i;
+			}
+		}
+		throw new DataNotFoundException(
+				column.toString() + " enum not specified in application.yml");
 	}
 
 	public String getApiForRoute(QuandlRouteTemplate route) {

@@ -19,7 +19,7 @@ import com.cof.app.service.PricingService;
 
 @Validated
 @RestController
-@RequestMapping("/data/pricing")
+@RequestMapping("/data")
 public class PricingDataController {
 
 	@Autowired
@@ -30,21 +30,75 @@ public class PricingDataController {
 			@NotEmpty
 			@RequestParam(value = "tickers")
 			List<String> tickers,
-			@RequestParam(value = "start_date", required = false)
+			@RequestParam(value = "start_date", defaultValue = "${defaults.startDate}")
 			String startDate,
-			@RequestParam(value = "end_date", required = false)
+			@RequestParam(value = "end_date", defaultValue = "${defaults.endDate}")
 			String endDate) {
 
-		DailyPricingData pricingData = pricingService.getDailyPricingData(tickers, startDate,
-				endDate);
+		pricingService.validateRequestParams(tickers, startDate, endDate);
+
+		DailyPricingData pricingData = pricingService.getDailyPricingDataForTickers(tickers,
+				startDate, endDate);
+
 		return new ResponseEntity<DailyPricingData>(pricingData, HttpStatus.OK);
 	}
 
+	@RequestMapping(value = "/daily/max-profit", method = RequestMethod.GET)
+	public ResponseEntity<?> getMaxDailyProfit(
+			@RequestParam(value = "tickers", defaultValue = "${defaults.tickers}")
+			List<String> tickers,
+			@RequestParam(value = "start_date", defaultValue = "${defaults.startDate}")
+			String startDate,
+			@RequestParam(value = "end_date", defaultValue = "${defaults.endDate}")
+			String endDate) {
+
+		pricingService.validateRequestParams(tickers, startDate, endDate);
+
+		return new ResponseEntity<String>("", HttpStatus.OK);
+	}
+
+	@RequestMapping(value = "/daily/busy-day", method = RequestMethod.GET)
+	public ResponseEntity<?> getBusiestDays(
+			@RequestParam(value = "tickers", defaultValue = "${defaults.tickers}")
+			List<String> tickers,
+			@RequestParam(value = "start_date", defaultValue = "${defaults.startDate}")
+			String startDate,
+			@RequestParam(value = "end_date", defaultValue = "${defaults.endDate}")
+			String endDate) {
+
+		pricingService.validateRequestParams(tickers, startDate, endDate);
+
+		return new ResponseEntity<String>("", HttpStatus.OK);
+	}
+
+	@RequestMapping(value = "/daily/loser", method = RequestMethod.GET)
+	public ResponseEntity<?> getBiggestLoser(
+			@RequestParam(value = "tickers", defaultValue = "${defaults.tickers}")
+			List<String> tickers,
+			@RequestParam(value = "start_date", defaultValue = "${defaults.startDate}")
+			String startDate,
+			@RequestParam(value = "end_date", defaultValue = "${defaults.endDate}")
+			String endDate) {
+
+		pricingService.validateRequestParams(tickers, startDate, endDate);
+
+		return new ResponseEntity<String>("", HttpStatus.OK);
+	}
+
 	@RequestMapping(value = "/avg-monthly", method = RequestMethod.GET)
-	public ResponseEntity<?> getAverageMonthlyPricingData() {
+	public ResponseEntity<?> getAverageMonthlyPricingData(
+			@RequestParam(value = "tickers", defaultValue = "${defaults.tickers}")
+			List<String> tickers,
+			@RequestParam(value = "start_date", defaultValue = "${defaults.startDate}")
+			String startDate,
+			@RequestParam(value = "end_date", defaultValue = "${defaults.endDate}")
+			String endDate) {
+
+		pricingService.validateRequestParams(tickers, startDate, endDate);
 
 		AverageMonthlyPricingData avgMonthlyPricingData = pricingService
-				.getAverageMonthlyPricingData();
+				.getAverageMonthlyPricingDataForTickers(tickers, startDate, endDate);
+
 		return new ResponseEntity<AverageMonthlyPricingData>(avgMonthlyPricingData, HttpStatus.OK);
 	}
 

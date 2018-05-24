@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cof.app.driver.impl.QuandlDriver;
-import com.cof.app.exception.InvalidParameterException;
-import com.cof.app.model.quandl.QuandlTickerPricingData;
 import com.cof.app.model.quandl.QuandlPricingDataset;
+import com.cof.app.model.quandl.QuandlTickerPricingData;
+import com.cof.app.service.PricingService;
 
 @RestController
 @RequestMapping("/quandl")
@@ -25,30 +25,31 @@ public class QuandlPricingDataController {
 	@Autowired
 	private QuandlDriver driver;
 
-	@RequestMapping(value = "/pricing", method = RequestMethod.GET)
+	@Autowired
+	private PricingService pricingService;
+
+	@RequestMapping(value = "/daily", method = RequestMethod.GET)
 	public ResponseEntity<?> getDailyPricingData(
 			@NotEmpty
 			@RequestParam(value = "tickers")
 			List<String> tickers,
-			@RequestParam(value = "start_date", required = false)
+			@RequestParam(value = "start_date", defaultValue = "${defaults.startDate}")
 			String startDate,
-			@RequestParam(value = "end_date", required = false)
+			@RequestParam(value = "end_date", defaultValue = "${defaults.endDate}")
 			String endDate) {
 
-		try {
-			List<QuandlPricingDataset> datasets = new ArrayList<>(tickers.size());
+		pricingService.validateRequestParams(tickers, startDate, endDate);
 
-			for (String ticker : tickers) {
-				QuandlTickerPricingData pricingData = driver.getPricingData(ticker, startDate,
-						endDate);
-				QuandlPricingDataset dataset = pricingData.getDataset();
+		List<QuandlPricingDataset> datasets = new ArrayList<>(tickers.size());
 
-				datasets.add(dataset);
-			}
-			return new ResponseEntity<List<QuandlPricingDataset>>(datasets, HttpStatus.OK);
-		} catch (InvalidParameterException e) {
-			return new ResponseEntity<InvalidParameterException>(e, HttpStatus.BAD_REQUEST);
+		for (String ticker : tickers) {
+			QuandlTickerPricingData pricingData = driver.getPricingData(ticker, startDate,
+					endDate);
+			QuandlPricingDataset dataset = pricingData.getDataset();
+
+			datasets.add(dataset);
 		}
+		return new ResponseEntity<List<QuandlPricingDataset>>(datasets, HttpStatus.OK);
 	}
 
 }

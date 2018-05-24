@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -14,16 +15,18 @@ import org.springframework.util.CollectionUtils;
 
 import com.cof.app.config.QuandlConfig;
 import com.cof.app.driver.impl.QuandlDriver;
+import com.cof.app.exception.DataNotFoundException;
 import com.cof.app.exception.InvalidParameterException;
 import com.cof.app.model.AverageMonthlyPricingData;
-import com.cof.app.model.AveragePricingDataMonthSegment;
 import com.cof.app.model.DailyPricingData;
+import com.cof.app.model.DailyProfit;
+import com.cof.app.model.MaxDailyProfits;
+import com.cof.app.model.MonthPricingDataAverage;
 import com.cof.app.model.PricingDataDaySegment;
+import com.cof.app.model.TickersDailyPricingData;
 import com.cof.app.model.TickersMonthlyAveragesData;
-import com.cof.app.model.TickersPricingData;
 import com.cof.app.model.quandl.QuandlApiQueryParam;
 import com.cof.app.model.quandl.QuandlPricingDataColumn;
-import com.cof.app.model.quandl.QuandlPricingDataset;
 import com.cof.app.model.quandl.QuandlTickerPricingData;
 import com.cof.app.service.PricingService;
 
@@ -40,195 +43,128 @@ public class QuandlService implements PricingService {
 	}
 
 	@Override
-	public DailyPricingData getDailyPricingData(List<String> tickers,
-			String startDate,
+	public DailyPricingData getDailyPricingDataForTickers(List<String> tickers, String startDate,
 			String endDate) {
-		if ((startDate == null) || (endDate == null)) {
-			startDate = config.getDefaultStartDate();
-			endDate = config.getDefaultEndDate();
-		}
-		validateDateRange(startDate, endDate);
-
 		DailyPricingData dailyPricingData = new DailyPricingData(startDate, endDate);
 
 		Map<String, List<PricingDataDaySegment>> tickersDailyPricingDataMap = new HashMap<>(
 				tickers.size());
 
 		for (String ticker : tickers) {
-			List<PricingDataDaySegment> tickerDaySegmentList = getDailyPricingDataForTickerInDateRange(
-					ticker, startDate, endDate);
+			List<PricingDataDaySegment> tickerDaySegmentList = getDailyPricingDataForTicker(ticker,
+					startDate, endDate);
 
-			if (CollectionUtils.isEmpty(tickerDaySegmentList)) {
-				// TODO throw some exception
-			}
 			tickersDailyPricingDataMap.put(ticker.toUpperCase(), tickerDaySegmentList);
 		}
-		TickersPricingData tickersPricingData = new TickersPricingData(tickersDailyPricingDataMap);
+		TickersDailyPricingData tickersPricingData = new TickersDailyPricingData(
+				tickersDailyPricingDataMap);
+
 		dailyPricingData.setTickerData(tickersPricingData);
 
 		return dailyPricingData;
 	}
 
-	private List<PricingDataDaySegment> getDailyPricingDataForTickerInDateRange(String ticker, String startDate,
-			String endDate) {
-		validateTicker(ticker);
-
-		QuandlTickerPricingData quandlTickerPricingData = driver.getPricingData(ticker, startDate,
+	/**
+	 * Gets daily pricing data for the provided ticker between the specified
+	 * date range.
+	 * 
+	 * @param ticker
+	 * @param startDate
+	 * @param endDate
+	 * @return A list of pricing data day segments for the specified ticker.
+	 */
+	private List<PricingDataDaySegment> getDailyPricingDataForTicker(String ticker,
+			String startDate, String endDate) {
+		List<List<Object>> quandlDayDataList = getValidQuandlDayDataList(ticker, startDate,
 				endDate);
 
-		if (quandlTickerPricingData != null) {
-			QuandlPricingDataset quandlDataset = quandlTickerPricingData.getDataset();
-
-			if (quandlDataset == null) {
-				// TODO throw NOT FOUND EXCEPTION
-				return null;
-			}
-			List<List<Object>> quandlDayDataList = quandlDataset.getData();
-
-			if (CollectionUtils.isEmpty(quandlDayDataList)) {
-				// TODO throw NOT FOUND EXCEPTION
-				return null;
-			}
-			List<PricingDataDaySegment> tickerDaySegmentList = buildTickerPricingDataDaySegmentList(
-					quandlDayDataList);
-
-			return tickerDaySegmentList;
-		}
-		// TODO throw some NOT FOUND exception
-		return null;
-	}
-
-	/**
-	 * Iterates over Quandl's ticker daily pricing data converting the data to a
-	 * List<PricingDataDaySegment>.
-	 * 
-	 * @param dataset
-	 * @return List<PricingDataDaySegment>
-	 */
-	private List<PricingDataDaySegment> buildTickerPricingDataDaySegmentList(
-			List<List<Object>> quandlDayDataList) {
-		QuandlPricingDataColumn[] orderedDataColumns = QuandlPricingDataColumn.values();
-
-		List<PricingDataDaySegment> dayPricingDataList = new ArrayList<>(quandlDayDataList.size());
+		List<PricingDataDaySegment> daySegments = new ArrayList<>(quandlDayDataList.size());
 
 		for (List<Object> quandlDayData : quandlDayDataList) {
-			PricingDataDaySegment dayPricingData = new PricingDataDaySegment();
+			PricingDataDaySegment daySegment = new PricingDataDaySegment();
 
-			for (int i = 0; i < orderedDataColumns.length; i++) {
-				QuandlPricingDataColumn column = orderedDataColumns[i];
+			for (int i = 0; i < config.getPricingDataColumnOrderSize(); i++) {
 				Object obj = quandlDayData.get(i);
+				QuandlPricingDataColumn column = config.getQuandlPricingDataColumnByIndex(i);
 
-				dayPricingData.setQuandlPricingData(column, obj);
+				daySegment.setQuandlPricingData(column, obj);
 			}
-			dayPricingDataList.add(dayPricingData);
+			daySegments.add(daySegment);
 		}
-		return dayPricingDataList;
+		return daySegments;
 	}
 
 	@Override
-	public AverageMonthlyPricingData getAverageMonthlyPricingData() {
-		String startDate = config.getDefaultStartDate();
-		String endDate = config.getDefaultEndDate();
-		List<String> tickers = config.getDefaultTickers();
+	public AverageMonthlyPricingData getAverageMonthlyPricingDataForTickers(List<String> tickers,
+			String startDate, String endDate) {
+		// get indexes of Quandl's pricing data column to fetch the required
+		// data to calculate averages
+		int dateIndex = config.getPricingDataColumnIndex(QuandlPricingDataColumn.DATE);
+		int openIndex = config.getPricingDataColumnIndex(QuandlPricingDataColumn.OPEN);
+		int closeIndex = config.getPricingDataColumnIndex(QuandlPricingDataColumn.CLOSE);
 
 		AverageMonthlyPricingData avgMonthlyPricingData = new AverageMonthlyPricingData(
 				getMonthFromDate(startDate), getMonthFromDate(endDate));
 
-		Map<String, List<AveragePricingDataMonthSegment>> tickersMonthlyAveragesMap = new HashMap<>(
+		Map<String, List<MonthPricingDataAverage>> allMonthlyAveragesMap = new HashMap<>(
 				tickers.size());
 
 		for (String ticker : tickers) {
-			List<AveragePricingDataMonthSegment> tickerMonthlyAverages = getTickerMonthlyAverages(
-					ticker, startDate, endDate);
+			List<MonthPricingDataAverage> tickerMonthlyAverages = getAverageMonthlyPricingDataForTicker(
+					ticker, startDate, endDate, dateIndex, openIndex, closeIndex);
 
-			if (CollectionUtils.isEmpty(tickerMonthlyAverages)) {
-				// TODO throw some exception
-				return null;
-			}
-			tickersMonthlyAveragesMap.put(ticker.toUpperCase(), tickerMonthlyAverages);
+			allMonthlyAveragesMap.put(ticker.toUpperCase(), tickerMonthlyAverages);
 		}
 		TickersMonthlyAveragesData tickersMonthlyData = new TickersMonthlyAveragesData(
-				tickersMonthlyAveragesMap);
+				allMonthlyAveragesMap);
+
 		avgMonthlyPricingData.setTickerData(tickersMonthlyData);
 
 		return avgMonthlyPricingData;
 	}
 
 	/**
-	 * Gets Quandl's ticker pricing data for the specified ticker
+	 * Fetches a ticker's Quandl daily pricing data for the specified date range
+	 * then calculates and returns its monthly average open/close pricing.
 	 * 
 	 * @param ticker
 	 * @param startDate
 	 * @param endDate
-	 * @return
+	 * @param dateIndex
+	 * @param openIndex
+	 * @param closeIndex
+	 * @return A list of average pricing data month segments for the specified
+	 *         ticker.
 	 */
-	private List<AveragePricingDataMonthSegment> getTickerMonthlyAverages(String ticker,
-			String startDate, String endDate) {
-		QuandlTickerPricingData quandlTickerPricingData = driver.getPricingData(ticker, startDate,
+	private List<MonthPricingDataAverage> getAverageMonthlyPricingDataForTicker(String ticker,
+			String startDate, String endDate, int dateIndex, int openIndex, int closeIndex) {
+		List<List<Object>> quandlDayDataList = getValidQuandlDayDataList(ticker, startDate,
 				endDate);
 
-		if (quandlTickerPricingData != null) {
-			QuandlPricingDataset quandlDataset = quandlTickerPricingData.getDataset();
+		List<MonthPricingDataAverage> monthlyAverages = new ArrayList<>();
 
-			if (quandlDataset == null) {
-				// TODO throw NOT FOUND EXCEPTION
-				return null;
-			}
-			List<List<Object>> quandlDayDataList = quandlDataset.getData();
-
-			if (CollectionUtils.isEmpty(quandlDayDataList)) {
-				// TODO throw NOT FOUND EXCEPTION
-				return null;
-			}
-			List<AveragePricingDataMonthSegment> tickerMonthlyAverages = calculateTickerMonthlyAverages(
-					quandlDayDataList);
-
-			return tickerMonthlyAverages;
-		} else {
-			// TODO throw some NOT FOUND exception
-			return null;
-		}
-	}
-
-	/**
-	 * Iterates through Quandl's ticker daily pricing data calculating the open
-	 * and close averages for each month then returning those monthly averages
-	 * as a List<AveragePricingDataMonthSegment>
-	 * 
-	 * @param quandlDayDataList
-	 * @return List<AveragePricingDataMonthSegment>
-	 */
-	private List<AveragePricingDataMonthSegment> calculateTickerMonthlyAverages(
-			List<List<Object>> quandlDayDataList) {
-		int dateIndex = QuandlPricingDataColumn.DATE.getIndex();
-		int openIndex = QuandlPricingDataColumn.OPEN.getIndex();
-		int closeIndex = QuandlPricingDataColumn.CLOSE.getIndex();
-
-		List<AveragePricingDataMonthSegment> avgMonthlyList = new ArrayList<>();
-
-		String currentMonth = null;
+		// set currentMonth to first month in quandlDayDataList
+		String currentMonth = getMonthFromDate((String) quandlDayDataList.get(0).get(dateIndex));
 		double monthOpenSum = 0;
 		double monthCloseSum = 0;
 		int numOfDaysInMonth = 0;
 
-		for (List<Object> quandlDayData : quandlDayDataList) {
+		Iterator<List<Object>> it = quandlDayDataList.iterator();
+
+		while (it.hasNext()) {
+			List<Object> quandlDayData = it.next();
+
 			String date = (String) quandlDayData.get(dateIndex);
 			String month = getMonthFromDate(date);
 
-			if (currentMonth == null) {
-				currentMonth = month;
-			}
-
-			// check if month has moved onto the next
+			// calculate current month's averages and add to avgMonthlyList if
+			// month has moved onto the next or if we're at the end of the
+			// quandlDayDataList
 			if (!currentMonth.equals(month)) {
-				// calculate current month's averages then add to avgMonthlyList
-				double avgOpen = monthOpenSum / numOfDaysInMonth;
-				double avgClose = monthCloseSum / numOfDaysInMonth;
+				MonthPricingDataAverage monthAverage = calculateAndGetMonthAverage(currentMonth, monthOpenSum,
+						monthCloseSum, numOfDaysInMonth);
 
-				AveragePricingDataMonthSegment avgOpenCloseMonth = new AveragePricingDataMonthSegment(
-						month, avgOpen, avgClose);
-
-				avgMonthlyList.add(avgOpenCloseMonth);
+				monthlyAverages.add(monthAverage);
 
 				// move to next month and reset variables for avg calculations
 				currentMonth = month;
@@ -239,27 +175,154 @@ public class QuandlService implements PricingService {
 			monthOpenSum += (double) quandlDayData.get(openIndex);
 			monthCloseSum += (double) quandlDayData.get(closeIndex);
 			numOfDaysInMonth++;
+
+			// check if at end of quandl data, if so then calculate the last
+			// month's averages and add to list
+			if (!it.hasNext()) {
+				MonthPricingDataAverage monthAverage = calculateAndGetMonthAverage(currentMonth, monthOpenSum,
+						monthCloseSum, numOfDaysInMonth);
+
+				monthlyAverages.add(monthAverage);
+			}
 		}
-		return avgMonthlyList;
+		return monthlyAverages;
 	}
 
-	///////////// Validation Methods /////////////
+	/**
+	 * Calculates a month's average open and close pricing and creates/returns
+	 * that information as MonthPricingDataAverage object.
+	 * 
+	 * @param month
+	 * @param openSum
+	 * @param closeSum
+	 * @param numOfDaysInMonth
+	 * @return Month's average open and close prices
+	 */
+	private MonthPricingDataAverage calculateAndGetMonthAverage(String month, double openSum, double closeSum,
+			double numOfDaysInMonth) {
+		double avgOpen = openSum / numOfDaysInMonth;
+		double avgClose = closeSum / numOfDaysInMonth;
+
+		MonthPricingDataAverage monthAverage = new MonthPricingDataAverage(month, avgOpen,
+				avgClose);
+		return monthAverage;
+	}
+
+	// gets highest amount of profit for each ticker if purchased at the day's
+	// low and sold at the day's high
+	@Override
+	public MaxDailyProfits getMaxDailyProfitForTickers(List<String> tickers, String startDate,
+			String endDate) {
+		int dateIndex = config.getPricingDataColumnIndex(QuandlPricingDataColumn.DATE);
+		int lowIndex = config.getPricingDataColumnIndex(QuandlPricingDataColumn.LOW);
+		int highIndex = config.getPricingDataColumnIndex(QuandlPricingDataColumn.HIGH);
+
+		// MaxDailyProfits maxProfits = new MaxDailyProfits();
+
+		Map<String, DailyProfit> maxProfitsMap = new HashMap<>(tickers.size());
+
+		for (String ticker : tickers) {
+
+		}
+
+		return null;
+	}
 
 	/**
-	 * This method ensures ticker symbols are be between 1 and 5 characters in
-	 * length which is standard.
+	 * Gets highest amount of profit for ticker if purchased at the day's low
+	 * and sold at the day's high.
 	 * 
 	 * @param ticker
+	 * @param startDate
+	 * @param endDate
+	 * @param dateIndex
+	 * @param lowIndex
+	 * @param highIndex
+	 * @return
 	 */
-	private void validateTicker(String ticker) {
-		if (StringUtils.isEmpty(ticker) || (ticker.length() > 5)) {
-			throw new InvalidParameterException(QuandlApiQueryParam.TICKER.value(), ticker);
+	private DailyProfit getMaxDailyProfitForTicker(String ticker, String startDate, String endDate,
+			int dateIndex, int lowIndex, int highIndex) {
+		List<List<Object>> quandlDayDataList = getValidQuandlDayDataList(ticker, startDate,
+				endDate);
+
+		double maxProfit = 0;
+		String maxProfitDate;
+
+		Iterator<List<Object>> it = quandlDayDataList.iterator();
+
+		while (it.hasNext()) {
+			List<Object> quandlDayData = it.next();
+
+			String date = (String) quandlDayData.get(dateIndex);
+		}
+
+		return null;
+	}
+
+	@Override
+	public void getBusiestDaysForTickers(List<String> tickers, String startDate, String endDate) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void getBiggestLoser(List<String> tickers, String startDate, String endDate) {
+		// TODO Auto-generated method stub
+
+	}
+
+	///////////// Validation/Helper Methods /////////////
+
+	/**
+	 * Fetches a ticker's Quandl pricing data from the driver and checks if any
+	 * data was returned/included, throws DataNotFoundException if not.
+	 * 
+	 * @param ticker
+	 * @param startDate
+	 * @param endDate
+	 * @return A list of each day's pricing data which is a list of objects for
+	 *         the specified ticker.
+	 */
+	private List<List<Object>> getValidQuandlDayDataList(String ticker, String startDate,
+			String endDate) {
+		QuandlTickerPricingData quandlTickerPricingData = driver.getPricingData(ticker, startDate,
+				endDate);
+
+		if ((quandlTickerPricingData == null) || (quandlTickerPricingData.getDataset() == null)
+				|| CollectionUtils.isEmpty(quandlTickerPricingData.getDataset().getData())) {
+			throw new DataNotFoundException(ticker + "'s pricing data between " + startDate
+					+ " and " + endDate + " not found.");
+		}
+		return quandlTickerPricingData.getDataset().getData();
+	}
+
+	@Override
+	public void validateRequestParams(List<String> tickers, String start, String end) {
+		validateTickers(tickers);
+		validateDateRange(start, end);
+	}
+
+	/**
+	 * Checks if tickers are in a valid format for Quandl's pricing service.
+	 * 
+	 * @param tickers
+	 */
+	private void validateTickers(List<String> tickers) {
+		if (CollectionUtils.isEmpty(tickers)) {
+			throw new InvalidParameterException(QuandlApiQueryParam.TICKER.value() + "'s", null);
+		}
+
+		for (String ticker : tickers) {
+
+			if (StringUtils.isEmpty(ticker) || (ticker.length() > 5)) {
+				throw new InvalidParameterException(QuandlApiQueryParam.TICKER.value(), ticker);
+			}
 		}
 	}
 
 	/**
-	 * This method ensures the start/end arguments are valid dates and that the
-	 * start date is before the end.
+	 * Checks whether startDate and endDate parameters are in a valid date
+	 * format, are actual dates, and that the start date is before the end date.
 	 * 
 	 * @param start
 	 * @param end
@@ -268,8 +331,8 @@ public class QuandlService implements PricingService {
 		SimpleDateFormat dateFormatter = new SimpleDateFormat(config.getDateFormat());
 		dateFormatter.setLenient(false);
 
-		Date startDate = validateDate(dateFormatter, QuandlApiQueryParam.START_DATE, start);
-		Date endDate = validateDate(dateFormatter, QuandlApiQueryParam.END_DATE, end);
+		Date startDate = getValidDate(dateFormatter, QuandlApiQueryParam.START_DATE, start);
+		Date endDate = getValidDate(dateFormatter, QuandlApiQueryParam.END_DATE, end);
 
 		if (!startDate.before(endDate)) {
 			throw new InvalidParameterException(QuandlApiQueryParam.START_DATE.value(), start,
@@ -284,9 +347,9 @@ public class QuandlService implements PricingService {
 	 * @param dateFormatter
 	 * @param param
 	 * @param date
-	 * @return
+	 * @return The Date object of the specified date.
 	 */
-	private Date validateDate(SimpleDateFormat dateFormatter, QuandlApiQueryParam param,
+	private Date getValidDate(SimpleDateFormat dateFormatter, QuandlApiQueryParam param,
 			String date) {
 		try {
 			return dateFormatter.parse(date);
@@ -295,8 +358,12 @@ public class QuandlService implements PricingService {
 		}
 	}
 
-	///////////// Helper Methods /////////////
-
+	/**
+	 * Cuts day from date. Ex. "2018-04-12" input returns "2018-04".
+	 * 
+	 * @param date
+	 * @return The year & month of the date argument.
+	 */
 	private String getMonthFromDate(String date) {
 		if (date.length() > 10) {
 			throw new IllegalArgumentException("Invalid date format.");
