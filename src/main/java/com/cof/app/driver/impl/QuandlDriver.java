@@ -28,8 +28,6 @@ public class QuandlDriver extends PricingDriver {
 		this.rest = rest;
 	}
 
-	///////////// API Request Methods /////////////
-
 	public QuandlTickerPricingData getPricingData(String ticker, String startDate,
 			String endDate) {
 		URI uri = buildURI(QuandlRouteTemplate.PRICING_DATA, ticker, startDate, endDate);

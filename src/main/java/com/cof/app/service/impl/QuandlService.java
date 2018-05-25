@@ -1,5 +1,6 @@
 package com.cof.app.service.impl;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -198,18 +199,19 @@ public class QuandlService implements PricingService {
 	 * @param numOfDaysInMonth
 	 * @return Month's average open and close prices
 	 */
-	private MonthPricingDataAverage calculateAndGetMonthAverage(String month, double openSum, double closeSum,
-			double numOfDaysInMonth) {
-		double avgOpen = openSum / numOfDaysInMonth;
-		double avgClose = closeSum / numOfDaysInMonth;
+	private MonthPricingDataAverage calculateAndGetMonthAverage(String month, double openSum,
+			double closeSum, double numOfDaysInMonth) {
+		double avgOpenDouble = openSum / numOfDaysInMonth;
+		double avgCloseDouble = closeSum / numOfDaysInMonth;
+
+		String avgOpen = formatToPriceString(avgOpenDouble);
+		String avgClose = formatToPriceString(avgCloseDouble);
 
 		MonthPricingDataAverage monthAverage = new MonthPricingDataAverage(month, avgOpen,
 				avgClose);
 		return monthAverage;
 	}
 
-	// gets highest amount of profit for each ticker if purchased at the day's
-	// low and sold at the day's high
 	@Override
 	public MaxDailyProfits getMaxDailyProfitForTickers(List<String> tickers, String startDate,
 			String endDate) {
@@ -217,15 +219,16 @@ public class QuandlService implements PricingService {
 		int lowIndex = config.getPricingDataColumnIndex(QuandlPricingDataColumn.LOW);
 		int highIndex = config.getPricingDataColumnIndex(QuandlPricingDataColumn.HIGH);
 
-		// MaxDailyProfits maxProfits = new MaxDailyProfits();
-
 		Map<String, DailyProfit> maxProfitsMap = new HashMap<>(tickers.size());
 
 		for (String ticker : tickers) {
+			DailyProfit maxDailyProfit = getMaxDailyProfitForTicker(ticker, startDate, endDate,
+					dateIndex, lowIndex, highIndex);
 
+			maxProfitsMap.put(ticker.toUpperCase(), maxDailyProfit);
 		}
-
-		return null;
+		MaxDailyProfits profits = new MaxDailyProfits(maxProfitsMap);
+		return profits;
 	}
 
 	/**
@@ -238,25 +241,37 @@ public class QuandlService implements PricingService {
 	 * @param dateIndex
 	 * @param lowIndex
 	 * @param highIndex
-	 * @return
+	 * @return max daily profit for the specified ticker
 	 */
 	private DailyProfit getMaxDailyProfitForTicker(String ticker, String startDate, String endDate,
 			int dateIndex, int lowIndex, int highIndex) {
 		List<List<Object>> quandlDayDataList = getValidQuandlDayDataList(ticker, startDate,
 				endDate);
 
-		double maxProfit = 0;
-		String maxProfitDate;
+		List<Object> firstData = quandlDayDataList.get(0);
+
+		double maxProfit = (double) firstData.get(highIndex) - (double) firstData.get(lowIndex);
+		String maxProfitDate = (String) firstData.get(dateIndex);
 
 		Iterator<List<Object>> it = quandlDayDataList.iterator();
 
 		while (it.hasNext()) {
 			List<Object> quandlDayData = it.next();
 
-			String date = (String) quandlDayData.get(dateIndex);
-		}
+			double low = (double) quandlDayData.get(lowIndex);
+			double high = (double) quandlDayData.get(highIndex);
 
-		return null;
+			double profit = high - low;
+
+			if (profit > maxProfit) {
+				maxProfit = profit;
+				maxProfitDate = (String) quandlDayData.get(dateIndex);
+			}
+		}
+		String maxProfitString = formatToPriceString(maxProfit);
+
+		DailyProfit dailyProfit = new DailyProfit(maxProfitDate, maxProfitString);
+		return dailyProfit;
 	}
 
 	@Override
@@ -369,6 +384,12 @@ public class QuandlService implements PricingService {
 			throw new IllegalArgumentException("Invalid date format.");
 		}
 		return date.substring(0, 7);
+	}
+
+	private String formatToPriceString(double num) {
+		BigDecimal value = new BigDecimal(num);
+		String price = value.setScale(2, BigDecimal.ROUND_HALF_EVEN).toPlainString();
+		return "$" + price;
 	}
 
 }

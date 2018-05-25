@@ -1,5 +1,8 @@
 package com.cof.app.model;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+@JsonPropertyOrder({ "date", "profit" })
 public class DailyProfit {
 
 	private String date;
