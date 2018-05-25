@@ -26,6 +26,28 @@ public class PricingDataDaySegment {
 	@JsonProperty("adj_volume")
 	private Double adjVolume;
 
+	public PricingDataDaySegment() {
+
+	}
+
+	public PricingDataDaySegment(String date, Double open, Double high, Double low, Double close,
+			Double volume, Double exDividend, Double splitRatio, Double adjOpen, Double adjHigh,
+			Double adjLow, Double adjClose, Double adjVolume) {
+		this.date = date;
+		this.open = open;
+		this.close = close;
+		this.high = high;
+		this.low = low;
+		this.volume = volume;
+		this.exDividend = exDividend;
+		this.splitRatio = splitRatio;
+		this.adjOpen = adjOpen;
+		this.adjClose = adjClose;
+		this.adjHigh = adjHigh;
+		this.adjLow = adjLow;
+		this.adjVolume = adjVolume;
+	}
+
 	public String getDate() {
 		return date;
 	}

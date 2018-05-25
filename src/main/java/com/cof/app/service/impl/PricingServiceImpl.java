@@ -32,14 +32,14 @@ import com.cof.app.model.quandl.QuandlTickerPricingData;
 import com.cof.app.service.PricingService;
 
 @Service
-public class QuandlService implements PricingService {
+public class PricingServiceImpl implements PricingService {
 
 	@Autowired
 	private QuandlConfig config;
 
 	private QuandlDriver driver;
 
-	public QuandlService(QuandlDriver driver) {
+	public PricingServiceImpl(QuandlDriver driver) {
 		this.driver = driver;
 	}
 

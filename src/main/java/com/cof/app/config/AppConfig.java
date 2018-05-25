@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import com.cof.app.driver.impl.QuandlDriver;
 import com.cof.app.logging.LoggingInterceptor;
 import com.cof.app.service.PricingService;
-import com.cof.app.service.impl.QuandlService;
+import com.cof.app.service.impl.PricingServiceImpl;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -26,7 +26,7 @@ public class AppConfig {
 
 	@Bean
 	PricingService pricingService() {
-		return new QuandlService(quandlDriver());
+		return new PricingServiceImpl(quandlDriver());
 	}
 
 	@Bean

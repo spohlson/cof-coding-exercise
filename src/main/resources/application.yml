@@ -4,7 +4,7 @@ defaults:
   tickers: COF,GOOGL,MSFT
 
 quandl:
-  apiKey: <api_key>
+  apiKey: <production api_key>
   baseAPI: https://www.quandl.com/api/v3
   dateFormat: yyyy-MM-dd
   routeTemplatesMap:
@@ -23,3 +23,29 @@ quandl:
     - ADJ_LOW
     - ADJ_CLOSE
     - ADJ_VOLUME
+
+debugLoggingEnabled: false
+
+---
+spring:
+  profiles: local
+  
+server:
+  port: 8080
+  
+debugLoggingEnabled: true
+
+quandl:
+  apiKey: s-GMZ_xkw6CrkGYUWs1p
+  
+---
+spring:
+  profiles: test
+
+tickers:
+  - COF
+  - GOOGL
+  - MSFT
+
+debugLoggingEnabled: true
+  

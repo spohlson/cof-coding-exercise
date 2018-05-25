@@ -38,6 +38,21 @@ public class QuandlPricingDataset {
 	@JsonProperty("database_id")
 	private Long databaseId;
 
+	public QuandlPricingDataset() {
+
+	}
+
+	/**
+	 * Used for testing purposes.
+	 * 
+	 * @param datasetCode
+	 * @param data
+	 */
+	public QuandlPricingDataset(String datasetCode, List<List<Object>> data) {
+		this.datasetCode = datasetCode;
+		this.data = data;
+	}
+
 	public Long getId() {
 		return id;
 	}
