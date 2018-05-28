@@ -198,4 +198,110 @@ public class PricingDataDaySegment {
 		}
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		PricingDataDaySegment other = (PricingDataDaySegment) obj;
+		if (adjClose == null) {
+			if (other.adjClose != null) {
+				return false;
+			}
+		} else if (!adjClose.equals(other.adjClose)) {
+			return false;
+		}
+		if (adjHigh == null) {
+			if (other.adjHigh != null) {
+				return false;
+			}
+		} else if (!adjHigh.equals(other.adjHigh)) {
+			return false;
+		}
+		if (adjLow == null) {
+			if (other.adjLow != null) {
+				return false;
+			}
+		} else if (!adjLow.equals(other.adjLow)) {
+			return false;
+		}
+		if (adjOpen == null) {
+			if (other.adjOpen != null) {
+				return false;
+			}
+		} else if (!adjOpen.equals(other.adjOpen)) {
+			return false;
+		}
+		if (adjVolume == null) {
+			if (other.adjVolume != null) {
+				return false;
+			}
+		} else if (!adjVolume.equals(other.adjVolume)) {
+			return false;
+		}
+		if (close == null) {
+			if (other.close != null) {
+				return false;
+			}
+		} else if (!close.equals(other.close)) {
+			return false;
+		}
+		if (date == null) {
+			if (other.date != null) {
+				return false;
+			}
+		} else if (!date.equals(other.date)) {
+			return false;
+		}
+		if (exDividend == null) {
+			if (other.exDividend != null) {
+				return false;
+			}
+		} else if (!exDividend.equals(other.exDividend)) {
+			return false;
+		}
+		if (high == null) {
+			if (other.high != null) {
+				return false;
+			}
+		} else if (!high.equals(other.high)) {
+			return false;
+		}
+		if (low == null) {
+			if (other.low != null) {
+				return false;
+			}
+		} else if (!low.equals(other.low)) {
+			return false;
+		}
+		if (open == null) {
+			if (other.open != null) {
+				return false;
+			}
+		} else if (!open.equals(other.open)) {
+			return false;
+		}
+		if (splitRatio == null) {
+			if (other.splitRatio != null) {
+				return false;
+			}
+		} else if (!splitRatio.equals(other.splitRatio)) {
+			return false;
+		}
+		if (volume == null) {
+			if (other.volume != null) {
+				return false;
+			}
+		} else if (!volume.equals(other.volume)) {
+			return false;
+		}
+		return true;
+	}
+
 }

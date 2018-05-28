@@ -24,28 +24,6 @@ quandl:
     - ADJ_CLOSE
     - ADJ_VOLUME
 
-debugLoggingEnabled: false
-
----
-spring:
-  profiles: local
-  
-server:
-  port: 8080
-  
 debugLoggingEnabled: true
 
-quandl:
-  apiKey: s-GMZ_xkw6CrkGYUWs1p
-  
 ---
-spring:
-  profiles: test
-
-tickers:
-  - COF
-  - GOOGL
-  - MSFT
-
-debugLoggingEnabled: true
-  

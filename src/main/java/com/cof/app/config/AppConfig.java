@@ -24,6 +24,14 @@ public class AppConfig {
 	@Value("${debugLoggingEnabled}")
 	private Boolean debugLoggingEnabled;
 
+	// @Autowired
+	// private QuandlConfig quandlConfig;
+
+	// @Bean
+	// PricingService pricingService() {
+	// return new PricingServiceImpl(quandlConfig, quandlDriver());
+	// }
+
 	@Bean
 	PricingService pricingService() {
 		return new PricingServiceImpl(quandlDriver());

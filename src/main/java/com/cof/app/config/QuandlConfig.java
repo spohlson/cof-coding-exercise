@@ -32,9 +32,6 @@ public class QuandlConfig {
 	@NotEmpty
 	private List<QuandlPricingDataColumn> pricingDataColumnOrder;
 
-	// @NotEmpty
-	// private Map<QuandlPricingDataColumn, Integer> pricingDataColumnIndexMap;
-
 	public String getApiKey() {
 		return apiKey;
 	}

@@ -34,5 +34,5 @@ dependencies {
     compile 'commons-io:commons-io:2.+'
     
     testCompile 'junit:junit:4.+'
-    testCompile 'org.mockito:mockito-all:2.+'
+    testCompile 'org.mockito:mockito-all:1.+'
 }

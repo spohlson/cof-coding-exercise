@@ -34,10 +34,13 @@ import com.cof.app.service.PricingService;
 @Service
 public class PricingServiceImpl implements PricingService {
 
-	@Autowired
 	private QuandlConfig config;
-
 	private QuandlDriver driver;
+
+	@Autowired
+	public void setConfig(QuandlConfig config) {
+		this.config = config;
+	}
 
 	public PricingServiceImpl(QuandlDriver driver) {
 		this.driver = driver;
