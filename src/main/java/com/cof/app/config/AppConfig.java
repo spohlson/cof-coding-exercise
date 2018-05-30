@@ -11,10 +11,10 @@ import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
-import com.cof.app.driver.impl.QuandlDriver;
+import com.cof.app.driver.QuandlDriver;
 import com.cof.app.logging.LoggingInterceptor;
 import com.cof.app.service.PricingService;
-import com.cof.app.service.impl.PricingServiceImpl;
+import com.cof.app.service.PricingServiceImpl;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -23,14 +23,6 @@ public class AppConfig {
 
 	@Value("${debugLoggingEnabled}")
 	private Boolean debugLoggingEnabled;
-
-	// @Autowired
-	// private QuandlConfig quandlConfig;
-
-	// @Bean
-	// PricingService pricingService() {
-	// return new PricingServiceImpl(quandlConfig, quandlDriver());
-	// }
 
 	@Bean
 	PricingService pricingService() {

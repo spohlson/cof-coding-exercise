@@ -1,4 +1,4 @@
-package com.cof.app.model.quandl;
+package com.cof.app.model;
 
 import org.apache.commons.lang3.StringUtils;
 

@@ -1,20 +1,22 @@
-package com.cof.app.driver.impl;
+package com.cof.app.driver;
 
 import java.net.URI;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.cof.app.config.QuandlConfig;
-import com.cof.app.driver.PricingDriver;
-import com.cof.app.model.quandl.QuandlApiQueryParam;
-import com.cof.app.model.quandl.QuandlRouteTemplate;
-import com.cof.app.model.quandl.QuandlTickerPricingData;
+import com.cof.app.exception.DataNotFoundException;
+import com.cof.app.model.QuandlApiQueryParam;
+import com.cof.app.model.QuandlRouteTemplate;
+import com.cof.app.model.QuandlTickerPricingData;
 
 @Service
 public class QuandlDriver extends PricingDriver {
@@ -28,6 +30,15 @@ public class QuandlDriver extends PricingDriver {
 		this.rest = rest;
 	}
 
+	/**
+	 * Fetches QuandlTickerPricingData for specified ticker in date range via
+	 * Quandl's API.
+	 * 
+	 * @param ticker
+	 * @param startDate
+	 * @param endDate
+	 * @return QuandlTickerPricingData
+	 */
 	public QuandlTickerPricingData getPricingData(String ticker, String startDate,
 			String endDate) {
 		URI uri = buildURI(QuandlRouteTemplate.PRICING_DATA, ticker, startDate, endDate);
@@ -37,6 +48,29 @@ public class QuandlDriver extends PricingDriver {
 				.getBody();
 
 		return pricingData;
+	}
+
+	/**
+	 * Fetches a ticker's Quandl pricing data and checks if any data was
+	 * returned/included, throws DataNotFoundException if not.
+	 * 
+	 * @param ticker
+	 * @param startDate
+	 * @param endDate
+	 * @return A list of each day's pricing data which is a list of objects for
+	 *         the specified ticker.
+	 */
+	public List<List<Object>> getTickerDayDataList(String ticker, String startDate,
+			String endDate) {
+		QuandlTickerPricingData quandlTickerPricingData = getPricingData(ticker, startDate,
+				endDate);
+
+		if ((quandlTickerPricingData == null) || (quandlTickerPricingData.getDataset() == null)
+				|| CollectionUtils.isEmpty(quandlTickerPricingData.getDataset().getData())) {
+			throw new DataNotFoundException(ticker + "'s pricing data between " + startDate
+					+ " and " + endDate + " not found.");
+		}
+		return quandlTickerPricingData.getDataset().getData();
 	}
 
 	///////////// URI Helper/Builder Methods /////////////

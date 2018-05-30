@@ -5,6 +5,7 @@ import java.util.List;
 import com.cof.app.model.AverageMonthlyPricingData;
 import com.cof.app.model.DailyPricingData;
 import com.cof.app.model.MaxDailyProfits;
+import com.cof.app.model.TickersBiggestLoser;
 import com.cof.app.model.TickersBusiestDays;
 
 public interface PricingService {
@@ -64,6 +65,15 @@ public interface PricingService {
 	TickersBusiestDays getBusiestDaysForTickers(List<String> tickers, String startDate,
 			String endDate);
 
-	void getBiggestLoser(List<String> tickers, String startDate, String endDate);
+	/**
+	 * Determines which ticker had the most days where the closing price was
+	 * lower than the opening price.
+	 * 
+	 * @param tickers
+	 * @param startDate
+	 * @param endDate
+	 * @return biggest loser
+	 */
+	TickersBiggestLoser getBiggestLoser(List<String> tickers, String startDate, String endDate);
 
 }

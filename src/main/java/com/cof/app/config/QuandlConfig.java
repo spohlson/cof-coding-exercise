@@ -10,8 +10,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import com.cof.app.exception.DataNotFoundException;
-import com.cof.app.model.quandl.QuandlPricingDataColumn;
-import com.cof.app.model.quandl.QuandlRouteTemplate;
+import com.cof.app.model.QuandlPricingDataColumn;
+import com.cof.app.model.QuandlRouteTemplate;
 
 @Configuration
 @ConfigurationProperties(prefix = "quandl")

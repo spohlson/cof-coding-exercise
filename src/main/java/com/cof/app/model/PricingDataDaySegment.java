@@ -1,6 +1,5 @@
 package com.cof.app.model;
 
-import com.cof.app.model.quandl.QuandlPricingDataColumn;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PricingDataDaySegment {

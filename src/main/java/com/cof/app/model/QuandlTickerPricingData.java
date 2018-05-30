@@ -1,4 +1,4 @@
-package com.cof.app.model.quandl;
+package com.cof.app.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

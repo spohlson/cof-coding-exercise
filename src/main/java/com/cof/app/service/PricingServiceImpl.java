@@ -1,6 +1,5 @@
-package com.cof.app.service.impl;
+package com.cof.app.service;
 
-import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -15,10 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.cof.app.config.QuandlConfig;
-import com.cof.app.driver.impl.QuandlDriver;
-import com.cof.app.exception.DataNotFoundException;
+import com.cof.app.driver.QuandlDriver;
 import com.cof.app.exception.InvalidParameterException;
 import com.cof.app.model.AverageMonthlyPricingData;
+import com.cof.app.model.BiggestLoser;
 import com.cof.app.model.BusiestDays;
 import com.cof.app.model.BusyDay;
 import com.cof.app.model.DailyPricingData;
@@ -26,13 +25,12 @@ import com.cof.app.model.DailyProfit;
 import com.cof.app.model.MaxDailyProfits;
 import com.cof.app.model.MonthPricingDataAverage;
 import com.cof.app.model.PricingDataDaySegment;
+import com.cof.app.model.QuandlApiQueryParam;
+import com.cof.app.model.QuandlPricingDataColumn;
+import com.cof.app.model.TickersBiggestLoser;
 import com.cof.app.model.TickersBusiestDays;
 import com.cof.app.model.TickersDailyPricingData;
 import com.cof.app.model.TickersMonthlyAveragesData;
-import com.cof.app.model.quandl.QuandlApiQueryParam;
-import com.cof.app.model.quandl.QuandlPricingDataColumn;
-import com.cof.app.model.quandl.QuandlTickerPricingData;
-import com.cof.app.service.PricingService;
 import com.cof.app.utility.PriceFormatter;
 
 @Service
@@ -73,8 +71,7 @@ public class PricingServiceImpl implements PricingService {
 	}
 
 	/**
-	 * Gets daily pricing data for the provided ticker between the specified
-	 * date range.
+	 * Gets daily pricing data for the specified ticker in date range.
 	 * 
 	 * @param ticker
 	 * @param startDate
@@ -83,7 +80,7 @@ public class PricingServiceImpl implements PricingService {
 	 */
 	private List<PricingDataDaySegment> getDailyPricingDataForTicker(String ticker,
 			String startDate, String endDate) {
-		List<List<Object>> quandlDayDataList = getValidQuandlDayDataList(ticker, startDate,
+		List<List<Object>> quandlDayDataList = driver.getTickerDayDataList(ticker, startDate,
 				endDate);
 
 		List<PricingDataDaySegment> daySegments = new ArrayList<>(quandlDayDataList.size());
@@ -146,7 +143,7 @@ public class PricingServiceImpl implements PricingService {
 	 */
 	private List<MonthPricingDataAverage> getAverageMonthlyPricingDataForTicker(String ticker,
 			String startDate, String endDate, int dateIndex, int openIndex, int closeIndex) {
-		List<List<Object>> quandlDayDataList = getValidQuandlDayDataList(ticker, startDate,
+		List<List<Object>> quandlDayDataList = driver.getTickerDayDataList(ticker, startDate,
 				endDate);
 
 		List<MonthPricingDataAverage> monthlyAverages = new ArrayList<>();
@@ -252,7 +249,7 @@ public class PricingServiceImpl implements PricingService {
 	 */
 	private DailyProfit getMaxDailyProfitForTicker(String ticker, String startDate, String endDate,
 			int dateIndex, int lowIndex, int highIndex) {
-		List<List<Object>> quandlDayDataList = getValidQuandlDayDataList(ticker, startDate,
+		List<List<Object>> quandlDayDataList = driver.getTickerDayDataList(ticker, startDate,
 				endDate);
 
 		List<Object> firstData = quandlDayDataList.get(0);
@@ -299,75 +296,111 @@ public class PricingServiceImpl implements PricingService {
 		return tickersBusiestDays;
 	}
 
+	/**
+	 * Determines the BusiestDays for the specified ticker.
+	 * 
+	 * @param ticker
+	 * @param startDate
+	 * @param endDate
+	 * @param dateIndex
+	 * @param volumeIndex
+	 * @return ticker's BusiestDays
+	 */
 	private BusiestDays getBusiestDaysForTicker(String ticker, String startDate, String endDate,
 			int dateIndex, int volumeIndex) {
-		List<List<Object>> quandlDayDataList = getValidQuandlDayDataList(ticker, startDate,
+		List<List<Object>> quandlDayDataList = driver.getTickerDayDataList(ticker, startDate,
 				endDate);
 		double volumeSum = 0;
 		double numOfDays = 0;
 
-		List<BusyDay> allDays = new ArrayList<>(quandlDayDataList.size());
+		List<Double> daysVolumeList = new ArrayList<>(quandlDayDataList.size());
 
+		// iterate over day data list to calculate the average volume while
+		// adding every day's volume to the daysVolumeList
 		for (List<Object> dayData : quandlDayDataList) {
-			String date = (String) dayData.get(dateIndex);
-			double volume = roundDouble((double) dayData.get(volumeIndex));
+			double volume = (double) dayData.get(volumeIndex);
 
-			allDays.add(new BusyDay(date, volume));
+			daysVolumeList.add(volume);
 
 			volumeSum += volume;
 			numOfDays++;
 		}
-		double avgVolume = roundDouble(volumeSum / numOfDays);
+		double avgVolume = volumeSum / numOfDays;
 		double minBusyDayVolume = (avgVolume / 10) + avgVolume;
 
 		List<BusyDay> busyDays = new ArrayList<>();
 
-		for (BusyDay day : allDays) {
-			double volume = day.getVolume();
+		for (int i = 0; i < daysVolumeList.size(); i++) {
+			double volume = daysVolumeList.get(i);
 
+			// check if volume is 10% higher than the average volume
 			if (volume > minBusyDayVolume) {
-				busyDays.add(day);
+				List<Object> dayData = quandlDayDataList.get(i);
+				String date = (String) dayData.get(dateIndex);
+
+				busyDays.add(new BusyDay(date, volume));
 			}
 		}
 		BusiestDays busiestDays = new BusiestDays(avgVolume, busyDays);
 		return busiestDays;
 	}
 
-	private double roundDouble(double num) {
-		BigDecimal value = new BigDecimal(num);
-		return value.setScale(0, BigDecimal.ROUND_HALF_EVEN).doubleValue();
-	}
-
 	@Override
-	public void getBiggestLoser(List<String> tickers, String startDate, String endDate) {
-		// TODO Auto-generated method stub
+	public TickersBiggestLoser getBiggestLoser(List<String> tickers, String startDate,
+			String endDate) {
+		int openIndex = config.getPricingDataColumnIndex(QuandlPricingDataColumn.OPEN);
+		int closeIndex = config.getPricingDataColumnIndex(QuandlPricingDataColumn.CLOSE);
 
+		String biggestLoser = null;
+		int maxLosingDays = 0;
+
+		for (String ticker : tickers) {
+			int numOfLosingDays = getNumOfLosingDaysForTicker(ticker, startDate, endDate, openIndex,
+					closeIndex);
+
+			if (numOfLosingDays > maxLosingDays) {
+				maxLosingDays = numOfLosingDays;
+				biggestLoser = ticker.toUpperCase();
+			}
+		}
+		TickersBiggestLoser loser = new TickersBiggestLoser();
+
+		if (biggestLoser != null) {
+			loser.setBiggestLoser(new BiggestLoser(biggestLoser, maxLosingDays));
+		}
+		return loser;
 	}
-
-	///////////// Validation/Helper Methods /////////////
 
 	/**
-	 * Fetches a ticker's Quandl pricing data from the driver and checks if any
-	 * data was returned/included, throws DataNotFoundException if not.
+	 * Calculates the number of losing days (open is higher than close data) for
+	 * the specified ticker in date range.
 	 * 
 	 * @param ticker
 	 * @param startDate
 	 * @param endDate
-	 * @return A list of each day's pricing data which is a list of objects for
-	 *         the specified ticker.
+	 * @param openIndex
+	 * @param closeIndex
+	 * @return number of losing days for ticker
 	 */
-	private List<List<Object>> getValidQuandlDayDataList(String ticker, String startDate,
-			String endDate) {
-		QuandlTickerPricingData quandlTickerPricingData = driver.getPricingData(ticker, startDate,
+	private int getNumOfLosingDaysForTicker(String ticker, String startDate, String endDate,
+			int openIndex, int closeIndex) {
+		List<List<Object>> quandlDayDataList = driver.getTickerDayDataList(ticker, startDate,
 				endDate);
 
-		if ((quandlTickerPricingData == null) || (quandlTickerPricingData.getDataset() == null)
-				|| CollectionUtils.isEmpty(quandlTickerPricingData.getDataset().getData())) {
-			throw new DataNotFoundException(ticker + "'s pricing data between " + startDate
-					+ " and " + endDate + " not found.");
+		int numOfLosingDays = 0;
+
+		for (List<Object> dayData : quandlDayDataList) {
+			double open = (double) dayData.get(openIndex);
+			double close = (double) dayData.get(closeIndex);
+
+			if (open > close) {
+				numOfLosingDays++;
+			}
 		}
-		return quandlTickerPricingData.getDataset().getData();
+		return numOfLosingDays;
 	}
+
+	///////////// Validation/Helper Methods /////////////
 
 	@Override
 	public void validateRequestParams(List<String> tickers, String start, String end) {

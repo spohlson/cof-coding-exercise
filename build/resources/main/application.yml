@@ -31,6 +31,6 @@ server:
   port: 8080
   
 quandl:
-  apiKey: <api_key>
+  apiKey: s-GMZ_xkw6CrkGYUWs1p
 
 debugLoggingEnabled: true

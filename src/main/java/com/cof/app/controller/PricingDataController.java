@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cof.app.model.AverageMonthlyPricingData;
 import com.cof.app.model.DailyPricingData;
 import com.cof.app.model.MaxDailyProfits;
+import com.cof.app.model.TickersBiggestLoser;
 import com.cof.app.model.TickersBusiestDays;
 import com.cof.app.service.PricingService;
 
@@ -58,6 +59,7 @@ public class PricingDataController {
 
 		MaxDailyProfits maxDailyProfits = pricingService.getMaxDailyProfitForTickers(tickers,
 				startDate, endDate);
+
 		return new ResponseEntity<MaxDailyProfits>(maxDailyProfits, HttpStatus.OK);
 	}
 
@@ -74,6 +76,7 @@ public class PricingDataController {
 
 		TickersBusiestDays tickersBusiestDays = pricingService.getBusiestDaysForTickers(tickers,
 				startDate, endDate);
+
 		return new ResponseEntity<TickersBusiestDays>(tickersBusiestDays, HttpStatus.OK);
 	}
 
@@ -88,7 +91,12 @@ public class PricingDataController {
 
 		pricingService.validateRequestParams(tickers, startDate, endDate);
 
-		return new ResponseEntity<String>("", HttpStatus.OK);
+		TickersBiggestLoser biggestLoser = pricingService.getBiggestLoser(tickers, startDate,
+				endDate);
+		HttpStatus status = (biggestLoser.getBiggestLoser() == null) ? HttpStatus.NOT_FOUND
+				: HttpStatus.OK;
+
+		return new ResponseEntity<TickersBiggestLoser>(biggestLoser, status);
 	}
 
 	@RequestMapping(value = "/avg-monthly", method = RequestMethod.GET)
