@@ -30,12 +30,16 @@ public class PricingDataDaySegment {
 
 	}
 
-	public PricingDataDaySegment(String date, Double open, Double high, Double low, Double close,
-			Double volume, Double exDividend, Double splitRatio, Double adjOpen, Double adjHigh,
-			Double adjLow, Double adjClose, Double adjVolume) {
+	public PricingDataDaySegment(String date, Double open, Double close) {
 		this.date = date;
 		this.open = open;
 		this.close = close;
+	}
+
+	public PricingDataDaySegment(String date, Double open, Double high, Double low, Double close,
+			Double volume, Double exDividend, Double splitRatio, Double adjOpen, Double adjHigh,
+			Double adjLow, Double adjClose, Double adjVolume) {
+		this(date, open, close);
 		this.high = high;
 		this.low = low;
 		this.volume = volume;

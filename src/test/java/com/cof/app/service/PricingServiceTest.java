@@ -5,7 +5,9 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -17,12 +19,18 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.cof.app.config.QuandlConfig;
 import com.cof.app.driver.impl.QuandlDriver;
+import com.cof.app.model.AverageMonthlyPricingData;
 import com.cof.app.model.DailyPricingData;
+import com.cof.app.model.DailyProfit;
+import com.cof.app.model.MaxDailyProfits;
+import com.cof.app.model.MonthPricingDataAverage;
 import com.cof.app.model.PricingDataDaySegment;
 import com.cof.app.model.TickersDailyPricingData;
+import com.cof.app.model.TickersMonthlyAveragesData;
 import com.cof.app.model.quandl.QuandlPricingDataColumn;
 import com.cof.app.model.quandl.QuandlPricingDataset;
 import com.cof.app.model.quandl.QuandlTickerPricingData;
+import com.cof.app.utility.PriceFormatter;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class PricingServiceTest {
@@ -116,13 +124,140 @@ public class PricingServiceTest {
 
 	@Test
 	public void testGetAverageMonthlyPricingDataForTickers() {
+		String googl = Ticker.GOOGL.name();
+		String cof = Ticker.COF.name();
+
+		List<String> tickers = new ArrayList<>();
+		tickers.add(googl);
+		tickers.add(cof);
+
+		String startDate = "2017-01-01";
+		String endDate = "2017-03-30";
+		int numOfDaysInMonth = 30;
+
+		List<String> months = new ArrayList<>();
+		months.add("2017-01");
+		months.add("2017-02");
+		months.add("2017-03");
+
+		String startMonth = months.get(0);
+		String endMonth = months.get(months.size() - 1);
+
+		List<MonthPricingDataAverage> googlAvgData = createAndMockAveragesData(months, googl,
+				numOfDaysInMonth, startDate, endDate);
+		List<MonthPricingDataAverage> cofAvgData = createAndMockAveragesData(months, cof,
+				numOfDaysInMonth, startDate, endDate);
+
+		AverageMonthlyPricingData avgMonthlyData = pricingService
+				.getAverageMonthlyPricingDataForTickers(tickers, startDate, endDate);
+		Assert.assertNotNull(avgMonthlyData);
+		Assert.assertTrue(startMonth.equals(avgMonthlyData.getStartMonth()));
+		Assert.assertTrue(endMonth.equals(avgMonthlyData.getEndMonth()));
+
+		TickersMonthlyAveragesData tickerData = avgMonthlyData.getTickerData();
+		Assert.assertNotNull(tickerData);
+
+		Map<String, List<MonthPricingDataAverage>> monthlyAveragesMap = tickerData
+				.getMonthlyAveragesMap();
+		Assert.assertFalse(MapUtils.isEmpty(monthlyAveragesMap));
+
+		Assert.assertTrue(googlAvgData.equals(monthlyAveragesMap.get(googl)));
+		Assert.assertTrue(cofAvgData.equals(monthlyAveragesMap.get(cof)));
+	}
+
+	@Test
+	public void testGetMaxDailyProfitForTickers() {
+		String ticker = Ticker.COF.name();
+
+		List<String> tickers = new ArrayList<>();
+		tickers.add(ticker);
+
+		String startDate = "2017-01-03";
+		String endDate = "2017-01-04";
+
+		double firstDayHigh = 20.50;
+		double firstDayLow = 1.50;
+
+		double maxProfit = firstDayHigh - firstDayLow;
+		String maxProfitString = PriceFormatter.formatToPriceString(maxProfit);
+
+		List<List<Object>> data = new ArrayList<>(2);
+		data.add(createDayData(startDate, null, null, firstDayLow, firstDayHigh));
+		data.add(createDayData(endDate, null, null, 5.0, 6.0));
+
+		QuandlTickerPricingData tickerData = getQuandlTestData(ticker, data);
+		when(driver.getPricingData(ticker, startDate, endDate)).thenReturn(tickerData);
+
+		MaxDailyProfits maxDailyProfits = pricingService.getMaxDailyProfitForTickers(tickers,
+				startDate, endDate);
+		Assert.assertNotNull(maxDailyProfits);
+
+		Map<String, DailyProfit> tickersMaxDailyProfits = maxDailyProfits
+				.getTickersMaxDailyProfits();
+		Assert.assertFalse(MapUtils.isEmpty(tickersMaxDailyProfits));
+
+		DailyProfit dailyProfit = tickersMaxDailyProfits.get(ticker);
+		Assert.assertNotNull(dailyProfit);
+		Assert.assertTrue(startDate.equals(dailyProfit.getDate()));
+		Assert.assertTrue(maxProfitString.equals(dailyProfit.getProfit()));
+	}
+
+	@Test
+	public void testGetBusiestDaysForTickers() {
 
 	}
 
-	///////////////////// Test Helper Methods /////////////////////
+	@Test
+	public void testGetBiggestLoser() {
 
-	private QuandlTickerPricingData getQuandlTestData(String ticker,
-			List<List<Object>> dailyData) {
+	}
+
+	///////////////// Test Helper Methods /////////////////
+
+	private List<MonthPricingDataAverage> createAndMockAveragesData(List<String> months,
+			String ticker, int numOfDaysInMonth, String startDate, String endDate) {
+		int size = months.size();
+		List<MonthPricingDataAverage> monthsAverages = new ArrayList<>(size);
+		List<List<Object>> data = new ArrayList<>();
+
+		double min = 0.01d;
+		double max = 15.99d;
+
+		for (String month : months) {
+			double openSum = 0.0;
+			double closeSum = 0.0;
+
+			int count = 1;
+
+			while (count <= numOfDaysInMonth) {
+				String date = month + ((count < 10) ? "-0" : "-") + String.valueOf(count);
+
+				double open = getRandomDouble(min, max);
+				openSum += open;
+
+				double close = getRandomDouble(min, max);
+				closeSum += close;
+
+				List<Object> dayData = createDayData(date, open, close, null, null);
+				data.add(dayData);
+
+				count++;
+			}
+			String avgOpen = PriceFormatter.formatToPriceString(openSum / numOfDaysInMonth);
+			String avgClose = PriceFormatter.formatToPriceString(closeSum / numOfDaysInMonth);
+
+			MonthPricingDataAverage monthAvg = new MonthPricingDataAverage(month, avgOpen,
+					avgClose);
+
+			monthsAverages.add(monthAvg);
+		}
+		QuandlTickerPricingData tickerData = getQuandlTestData(ticker, data);
+		when(driver.getPricingData(ticker, startDate, endDate)).thenReturn(tickerData);
+
+		return monthsAverages;
+	}
+
+	private QuandlTickerPricingData getQuandlTestData(String ticker, List<List<Object>> dailyData) {
 		QuandlPricingDataset dataset = new QuandlPricingDataset(ticker, dailyData);
 		QuandlTickerPricingData data = new QuandlTickerPricingData(dataset);
 		return data;
@@ -137,6 +272,41 @@ public class PricingServiceTest {
 			dailyData.add(dayData);
 		}
 		return dailyData;
+	}
+
+	private List<Object> createDayData(String date, Double open, Double close, Double low,
+			Double high) {
+		QuandlPricingDataColumn[] columns = QuandlPricingDataColumn.values();
+		List<Object> dayData = new ArrayList<>(columns.length);
+		double defaultVal = 0.0;
+
+		for (QuandlPricingDataColumn column : columns) {
+			switch (column) {
+				case DATE:
+					dayData.add(date);
+					break;
+				case OPEN:
+					open = (open != null) ? open : defaultVal;
+					dayData.add(open);
+					break;
+				case CLOSE:
+					close = (close != null) ? close : defaultVal;
+					dayData.add(close);
+					break;
+				case HIGH:
+					high = (high != null) ? high : defaultVal;
+					dayData.add(high);
+					break;
+				case LOW:
+					low = (low != null) ? low : defaultVal;
+					dayData.add(low);
+					break;
+				default:
+					dayData.add(defaultVal);
+					break;
+			}
+		}
+		return dayData;
 	}
 
 	private List<Object> convertSegmentToList(PricingDataDaySegment segment) {
@@ -155,6 +325,10 @@ public class PricingServiceTest {
 		dayData.add(segment.getAdjClose());
 		dayData.add(segment.getAdjVolume());
 		return dayData;
+	}
+
+	private double getRandomDouble(double min, double max) {
+		return min + ((max - min) * new Random().nextDouble());
 	}
 
 }

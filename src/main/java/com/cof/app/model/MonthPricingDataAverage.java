@@ -42,4 +42,40 @@ public class MonthPricingDataAverage {
 		this.averageClose = averageClose;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		MonthPricingDataAverage other = (MonthPricingDataAverage) obj;
+		if (averageClose == null) {
+			if (other.averageClose != null) {
+				return false;
+			}
+		} else if (!averageClose.equals(other.averageClose)) {
+			return false;
+		}
+		if (averageOpen == null) {
+			if (other.averageOpen != null) {
+				return false;
+			}
+		} else if (!averageOpen.equals(other.averageOpen)) {
+			return false;
+		}
+		if (month == null) {
+			if (other.month != null) {
+				return false;
+			}
+		} else if (!month.equals(other.month)) {
+			return false;
+		}
+		return true;
+	}
+
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import com.cof.app.model.AverageMonthlyPricingData;
 import com.cof.app.model.DailyPricingData;
 import com.cof.app.model.MaxDailyProfits;
+import com.cof.app.model.TickersBusiestDays;
 
 public interface PricingService {
 
@@ -52,7 +53,16 @@ public interface PricingService {
 	MaxDailyProfits getMaxDailyProfitForTickers(List<String> tickers, String startDate,
 			String endDate);
 
-	void getBusiestDaysForTickers(List<String> tickers, String startDate, String endDate);
+	/**
+	 * Shows which days generated unusually high activity (volume was more than
+	 * 10% higher than the ticker's average) for the specified tickers.
+	 * 
+	 * @param tickers
+	 * @param startDate
+	 * @param endDate
+	 */
+	TickersBusiestDays getBusiestDaysForTickers(List<String> tickers, String startDate,
+			String endDate);
 
 	void getBiggestLoser(List<String> tickers, String startDate, String endDate);
 

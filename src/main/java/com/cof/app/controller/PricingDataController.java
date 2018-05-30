@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cof.app.model.AverageMonthlyPricingData;
 import com.cof.app.model.DailyPricingData;
 import com.cof.app.model.MaxDailyProfits;
+import com.cof.app.model.TickersBusiestDays;
 import com.cof.app.service.PricingService;
 
 @Validated
@@ -71,7 +72,9 @@ public class PricingDataController {
 
 		pricingService.validateRequestParams(tickers, startDate, endDate);
 
-		return new ResponseEntity<String>("", HttpStatus.OK);
+		TickersBusiestDays tickersBusiestDays = pricingService.getBusiestDaysForTickers(tickers,
+				startDate, endDate);
+		return new ResponseEntity<TickersBusiestDays>(tickersBusiestDays, HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/daily/loser", method = RequestMethod.GET)

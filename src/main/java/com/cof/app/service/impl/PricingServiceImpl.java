@@ -19,17 +19,21 @@ import com.cof.app.driver.impl.QuandlDriver;
 import com.cof.app.exception.DataNotFoundException;
 import com.cof.app.exception.InvalidParameterException;
 import com.cof.app.model.AverageMonthlyPricingData;
+import com.cof.app.model.BusiestDays;
+import com.cof.app.model.BusyDay;
 import com.cof.app.model.DailyPricingData;
 import com.cof.app.model.DailyProfit;
 import com.cof.app.model.MaxDailyProfits;
 import com.cof.app.model.MonthPricingDataAverage;
 import com.cof.app.model.PricingDataDaySegment;
+import com.cof.app.model.TickersBusiestDays;
 import com.cof.app.model.TickersDailyPricingData;
 import com.cof.app.model.TickersMonthlyAveragesData;
 import com.cof.app.model.quandl.QuandlApiQueryParam;
 import com.cof.app.model.quandl.QuandlPricingDataColumn;
 import com.cof.app.model.quandl.QuandlTickerPricingData;
 import com.cof.app.service.PricingService;
+import com.cof.app.utility.PriceFormatter;
 
 @Service
 public class PricingServiceImpl implements PricingService {
@@ -207,8 +211,8 @@ public class PricingServiceImpl implements PricingService {
 		double avgOpenDouble = openSum / numOfDaysInMonth;
 		double avgCloseDouble = closeSum / numOfDaysInMonth;
 
-		String avgOpen = formatToPriceString(avgOpenDouble);
-		String avgClose = formatToPriceString(avgCloseDouble);
+		String avgOpen = PriceFormatter.formatToPriceString(avgOpenDouble);
+		String avgClose = PriceFormatter.formatToPriceString(avgCloseDouble);
 
 		MonthPricingDataAverage monthAverage = new MonthPricingDataAverage(month, avgOpen,
 				avgClose);
@@ -271,16 +275,67 @@ public class PricingServiceImpl implements PricingService {
 				maxProfitDate = (String) quandlDayData.get(dateIndex);
 			}
 		}
-		String maxProfitString = formatToPriceString(maxProfit);
+		String maxProfitString = PriceFormatter.formatToPriceString(maxProfit);
 
 		DailyProfit dailyProfit = new DailyProfit(maxProfitDate, maxProfitString);
 		return dailyProfit;
 	}
 
 	@Override
-	public void getBusiestDaysForTickers(List<String> tickers, String startDate, String endDate) {
-		// TODO Auto-generated method stub
+	public TickersBusiestDays getBusiestDaysForTickers(List<String> tickers, String startDate,
+			String endDate) {
+		Map<String, BusiestDays> tickersBusiestDaysMap = new HashMap<>(tickers.size());
 
+		int dateIndex = config.getPricingDataColumnIndex(QuandlPricingDataColumn.DATE);
+		int volumeIndex = config.getPricingDataColumnIndex(QuandlPricingDataColumn.VOLUME);
+
+		for (String ticker : tickers) {
+			BusiestDays busiestDays = getBusiestDaysForTicker(ticker, startDate, endDate, dateIndex,
+					volumeIndex);
+
+			tickersBusiestDaysMap.put(ticker.toUpperCase(), busiestDays);
+		}
+		TickersBusiestDays tickersBusiestDays = new TickersBusiestDays(tickersBusiestDaysMap);
+		return tickersBusiestDays;
+	}
+
+	private BusiestDays getBusiestDaysForTicker(String ticker, String startDate, String endDate,
+			int dateIndex, int volumeIndex) {
+		List<List<Object>> quandlDayDataList = getValidQuandlDayDataList(ticker, startDate,
+				endDate);
+		double volumeSum = 0;
+		double numOfDays = 0;
+
+		List<BusyDay> allDays = new ArrayList<>(quandlDayDataList.size());
+
+		for (List<Object> dayData : quandlDayDataList) {
+			String date = (String) dayData.get(dateIndex);
+			double volume = roundDouble((double) dayData.get(volumeIndex));
+
+			allDays.add(new BusyDay(date, volume));
+
+			volumeSum += volume;
+			numOfDays++;
+		}
+		double avgVolume = roundDouble(volumeSum / numOfDays);
+		double minBusyDayVolume = (avgVolume / 10) + avgVolume;
+
+		List<BusyDay> busyDays = new ArrayList<>();
+
+		for (BusyDay day : allDays) {
+			double volume = day.getVolume();
+
+			if (volume > minBusyDayVolume) {
+				busyDays.add(day);
+			}
+		}
+		BusiestDays busiestDays = new BusiestDays(avgVolume, busyDays);
+		return busiestDays;
+	}
+
+	private double roundDouble(double num) {
+		BigDecimal value = new BigDecimal(num);
+		return value.setScale(0, BigDecimal.ROUND_HALF_EVEN).doubleValue();
 	}
 
 	@Override
@@ -387,12 +442,6 @@ public class PricingServiceImpl implements PricingService {
 			throw new IllegalArgumentException("Invalid date format.");
 		}
 		return date.substring(0, 7);
-	}
-
-	private String formatToPriceString(double num) {
-		BigDecimal value = new BigDecimal(num);
-		String price = value.setScale(2, BigDecimal.ROUND_HALF_EVEN).toPlainString();
-		return "$" + price;
 	}
 
 }
