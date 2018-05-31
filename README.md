@@ -5,7 +5,7 @@
 2. Clone repository
 3. Update src/main/resources/application.yml file:
     * Insert Quandl's api key
-    * Change the server port if you wish it to not run on 8080
+    * Change the server port if you wish to run on a different port than 8080
     
     ```
     spring:
