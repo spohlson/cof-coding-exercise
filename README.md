@@ -21,7 +21,7 @@
     quandl:
         apiKey: <api_key>
     ```
-    **** Note: No need to activate a profile as the `local` spring profile is already set to active in the `src/main/resources/application.properties` file.
+    *** Note: No need to activate a profile as the `local` spring profile is already set to active in the `src/main/resources/application.properties` file.
 4. From inside the cloned repo via the command line run the following to start the application:
     
         gradle bootRun
@@ -30,5 +30,7 @@
 ## Swagger API Documentation:
 
 * Run the application then go to the [Swagger UI](http://localhost:8080/swagger-ui.html) in a browser. This will show you how to access the APIs via command line and/or a REST client like [Postman](https://www.getpostman.com/).
+
+*** Note: If you changed the server port in the application.yml file then just make sure to update the swagger url to include that port.
 
 
