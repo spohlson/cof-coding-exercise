@@ -23,6 +23,8 @@ quandl:
     - ADJ_CLOSE
     - ADJ_VOLUME
 
+debugLoggingEnabled: false
+
 ---
 spring:
   profiles: local
