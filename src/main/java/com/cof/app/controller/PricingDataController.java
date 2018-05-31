@@ -2,12 +2,9 @@ package com.cof.app.controller;
 
 import java.util.List;
 
-import javax.validation.constraints.NotEmpty;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,7 +17,6 @@ import com.cof.app.model.TickersBiggestLoser;
 import com.cof.app.model.TickersBusiestDays;
 import com.cof.app.service.PricingService;
 
-@Validated
 @RestController
 @RequestMapping("/data")
 public class PricingDataController {
@@ -30,8 +26,7 @@ public class PricingDataController {
 
 	@RequestMapping(value = "/daily", method = RequestMethod.GET)
 	public ResponseEntity<?> getDailyPricingData(
-			@NotEmpty
-			@RequestParam(value = "tickers")
+			@RequestParam(value = "tickers", defaultValue = "${defaults.tickers}")
 			List<String> tickers,
 			@RequestParam(value = "start_date", defaultValue = "${defaults.startDate}")
 			String startDate,
